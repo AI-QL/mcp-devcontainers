@@ -4,12 +4,11 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import {
     CallToolRequestSchema,
     ListToolsRequestSchema,
-    LoggingLevel,
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { devUp, devRunUserCommands, devExec } from "./devcontainer.js"
+import { devUp, devRunUserCommands, devExec, NULL_DEVICE } from "./devcontainer.js"
 
-type ToolInput =  Tool['inputSchema']
+type ToolInput = Tool['inputSchema']
 
 enum ToolName {
     DEV_UP = "devcontainer_up",
@@ -24,23 +23,23 @@ const ToolDescriptions = {
 };
 
 const WS_FOLDER_DESC = "Path to the workspace folder (string)"
-const STDIO_FILE_PATH = "Path for output logs (string)"
+const STDIO_FILE_PATH = `Path for output logs (string), default is ${NULL_DEVICE}`
 const COMMAND = "Command to execute (array of string)"
 
 const DevUpSchema = z.object({
-  workspaceFolder: z.string().describe(WS_FOLDER_DESC),
-  stdioFilePath: z.string().describe(STDIO_FILE_PATH),
+    workspaceFolder: z.string().describe(WS_FOLDER_DESC),
+    stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
 });
 
 const DevRunSchema = z.object({
-  workspaceFolder: z.string().describe(WS_FOLDER_DESC),
-  stdioFilePath: z.string().describe(STDIO_FILE_PATH),
+    workspaceFolder: z.string().describe(WS_FOLDER_DESC),
+    stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
 });
 
 const DevExecSchema = z.object({
-  workspaceFolder: z.string().describe(WS_FOLDER_DESC),
-  stdioFilePath: z.string().describe(STDIO_FILE_PATH),
-  command: z.array(z.string()).min(1).describe(COMMAND)
+    workspaceFolder: z.string().describe(WS_FOLDER_DESC),
+    stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
+    command: z.array(z.string()).min(1).describe(COMMAND)
 });
 
 export const createServer = () => {
@@ -70,48 +69,6 @@ export const createServer = () => {
         }
     }, 10000);
 
-    const logLevel: LoggingLevel = "debug";
-
-    const messages = [
-        { level: "debug", data: "Debug-level message" },
-        { level: "info", data: "Info-level message" },
-        { level: "notice", data: "Notice-level message" },
-        { level: "warning", data: "Warning-level message" },
-        { level: "error", data: "Error-level message" },
-        { level: "critical", data: "Critical-level message" },
-        { level: "alert", data: "Alert level-message" },
-        { level: "emergency", data: "Emergency-level message" },
-    ];
-
-    const isMessageIgnored = (level: LoggingLevel): boolean => {
-        const currentLevel = messages.findIndex((msg) => logLevel === msg.level);
-        const messageLevel = messages.findIndex((msg) => level === msg.level);
-        return messageLevel < currentLevel;
-    };
-
-    const logsUpdateInterval: NodeJS.Timeout = setInterval(() => {
-        const message = {
-            method: "notifications/message",
-            params: messages[Math.floor(Math.random() * messages.length)],
-        };
-        if (!isMessageIgnored(message.params.level as LoggingLevel))
-            server.notification(message);
-    }, 20000);
-
-    // Set up update interval for stderr messages
-    const stdErrUpdateInterval: NodeJS.Timeout = setInterval(() => {
-        const shortTimestamp = new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-        });
-        server.notification({
-            method: "notifications/stderr",
-            params: { content: `${shortTimestamp}: A stderr message` },
-        });
-    }, 30000);
-
-
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         const tools: Tool[] = [
             {
@@ -135,47 +92,45 @@ export const createServer = () => {
     });
 
     server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-    
-    switch (name) {
-        case ToolName.DEV_UP: {
-            const validatedArgs = DevUpSchema.parse(args);
-            const result = await devUp(validatedArgs);
-            return {
-                content: [
-                    { type: "text", text: `Devcontainer Up result: ${result}` },
-                ],
-            };
+        const { name, arguments: args } = request.params;
+
+        switch (name) {
+            case ToolName.DEV_UP: {
+                const validatedArgs = DevUpSchema.parse(args);
+                const result = await devUp(validatedArgs);
+                return {
+                    content: [
+                        { type: "text", text: `Devcontainer Up result: ${result}` },
+                    ],
+                };
+            }
+            case ToolName.DEV_RUN: {
+                const validatedArgs = DevRunSchema.parse(args);
+                const result = await devRunUserCommands(validatedArgs);
+                return {
+                    content: [
+                        { type: "text", text: `Devcontainer Run User Commands result: ${result}` },
+                    ],
+                };
+            }
+            case ToolName.DEV_EXEC: {
+                const validatedArgs = DevExecSchema.parse(args);
+                const result = await devExec(validatedArgs);
+                return {
+                    content: [
+                        { type: "text", text: `Dev Exec result: ${result}` },
+                    ],
+                };
+            }
+            default:
+                throw new Error(`Unknown tool: ${name}`);
         }
-        case ToolName.DEV_RUN: {
-            const validatedArgs = DevRunSchema.parse(args);
-            const result = await devRunUserCommands(validatedArgs);
-            return {
-                content: [
-                    { type: "text", text: `Devcontainer Run User Commands result: ${result}` },
-                ],
-            };
-        }
-        case ToolName.DEV_EXEC: {
-            const validatedArgs = DevExecSchema.parse(args);
-            const result = await devExec(validatedArgs);
-            return {
-                content: [
-                    { type: "text", text: `Dev Exec result: ${result}` },
-                ],
-            };
-        }
-        default:
-            throw new Error(`Unknown tool: ${name}`);
-    }
-});
+    });
 
 
 
     const cleanup = async () => {
         if (subsUpdateInterval) clearInterval(subsUpdateInterval);
-        if (logsUpdateInterval) clearInterval(logsUpdateInterval);
-        if (stdErrUpdateInterval) clearInterval(stdErrUpdateInterval);
     };
 
     return { server, cleanup };

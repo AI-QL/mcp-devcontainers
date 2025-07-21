@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from "path";
 import { createRequire } from "module";
 
-const NULL_DEVICE = '/dev/null';
+export const NULL_DEVICE = '/dev/null';
 const require = createRequire(import.meta.url);
 
 function devcontainerBinaryPath(): string {
@@ -72,8 +72,8 @@ async function runCommand(args: string[], stdoutStream: fs.WriteStream): Promise
       if (code === 0) {
         resolve(code);
       } else {
-        const reason = signal 
-          ? `terminated by signal ${signal}` 
+        const reason = signal
+          ? `terminated by signal ${signal}`
           : `exited with code ${code}`;
         reject(new Error(`Command failed: ${args.join(' ')} (${reason})`));
       }
