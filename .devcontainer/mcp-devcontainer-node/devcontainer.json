@@ -12,7 +12,7 @@
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": ".devcontainer/post-create.sh",
+    "postCreateCommand": ".devcontainer/mcp-devcontainer-node/post-create.sh",
     // Configure tool-specific properties.
     "customizations": {
         "vscode": {
