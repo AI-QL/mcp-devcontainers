@@ -4,19 +4,8 @@ import path from "path";
 import { createRequire } from "module";
 
 export const NULL_DEVICE = '/dev/null';
-const require = createRequire(import.meta.url);
 
-type CommandResult = Promise<{code: number, stdout: string}>;
-
-function devcontainerBinaryPath(): string {
-  try {
-    const pkgPath = require.resolve('@devcontainers/cli/package.json');
-    const pkg = require(pkgPath);
-    return path.join(path.dirname(pkgPath), pkg.bin.devcontainer);
-  } catch (error) {
-    throw new Error('Failed to locate devcontainer CLI: ' + (error as Error).message);
-  }
-}
+type CommandResult = Promise<string>;
 
 interface DevcontainerOptions {
   stdioFilePath?: string;
@@ -35,6 +24,18 @@ interface DevContainerExecOptions extends DevcontainerOptions {
   command: string[];
 }
 
+const require = createRequire(import.meta.url);
+
+function devcontainerBinaryPath(): string {
+  try {
+    const pkgPath = require.resolve('@devcontainers/cli/package.json');
+    const pkg = require(pkgPath);
+    return path.join(path.dirname(pkgPath), pkg.bin.devcontainer);
+  } catch (error) {
+    throw new Error('Failed to locate devcontainer CLI: ' + (error as Error).message);
+  }
+}
+
 function createOutputStream(stdioFilePath: string = NULL_DEVICE): fs.WriteStream {
   try {
     return fs.createWriteStream(stdioFilePath, { flags: 'w' })
@@ -50,8 +51,8 @@ async function runCommand(args: string[], stdoutStream: fs.WriteStream): Command
       stdio: ['ignore', 'pipe', 'pipe'],
     } as SpawnOptions);
 
-    let stdoutData = '';
-    let stderrData = '';
+    const stdoutData: string[] = [];
+    const stderrData: string[] = [];
 
     child.on('error', (error) => {
       cleanup(error);
@@ -60,14 +61,13 @@ async function runCommand(args: string[], stdoutStream: fs.WriteStream): Command
 
     // Pipe stdout to the stream as before, but also collect it
     child.stdout?.on('data', (data) => {
-      console.log(data.toString())
-      stdoutData += JSON.stringify(data.toString(), null, 2);
+      stdoutData.push(data.toString())
       stdoutStream.write(data);
     });
 
     // Collect stderr data instead of piping to process.stderr
     child.stderr?.on('data', (data) => {
-      stderrData += data.toString();
+      stderrData.push(data.toString().trim());
     });
 
     const cleanup = (error?: Error) => {
@@ -84,17 +84,14 @@ async function runCommand(args: string[], stdoutStream: fs.WriteStream): Command
     child.on('close', (code, signal) => {
       cleanup();
       if (code === 0) {
-        resolve({
-          code: code,
-          stdout: stdoutData
-        });
+        resolve(`success with code ${code}\n-------\n${stdoutData.join('\n\n')}`);
       } else {
         const reason = signal
           ? `terminated by signal ${signal}`
           : `exited with code ${code}`;
         
         // Combine the error message with the collected stderr output
-        const errorMessage = `Command failed: devcontainer ${args.join(' ')} (${reason})\n${stderrData.trim()}`;
+        const errorMessage = `Command failed: devcontainer ${args.join(' ')} (${reason})\n-------\n${stderrData.join('\n\n')}`;
         reject(new Error(errorMessage));
       }
     });

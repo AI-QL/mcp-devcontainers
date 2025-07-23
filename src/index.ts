@@ -7,7 +7,7 @@ const scriptName = args[0] || 'stdio';
 async function run() {
     try {
         // Dynamically import only the requested module to prevent all modules from initializing
-        switch (scriptName) {
+        switch (scriptName.toLowerCase()) {
             case 'stdio':
                 // Import and run the default server
                 await import('./stdio.js');
@@ -16,7 +16,8 @@ async function run() {
                 // Import and run the SSE server
                 await import('./sse.js');
                 break;
-            case 'streamableHttp':
+            case 'http':
+            case 'streamablehttp':
                 // Import and run the streamable HTTP server
                 await import('./streamableHttp.js');
                 break;
