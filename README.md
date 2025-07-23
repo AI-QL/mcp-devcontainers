@@ -32,7 +32,30 @@ npx -y mcp-devcontainers
 
 ## 📚 Tools
 
-### In Development. Coming Soon
+Tools are built on the [devcontainers/cli](https://github.com/devcontainers/cli)
+
+They enable you to generate and configure development containers directly from `devcontainer.json` configuration files:
+
+- ### devcontainer_up
+  - workspaceFolder: Path to the workspace folder (string)
+  - outputFilePath: Path for output logs (string)
+
+> Initializes and starts a devcontainer environment in the specified workspace folder. Ensures the devcontainer is operational and ready for development tasks.
+
+
+- ### devcontainer_run_user_commands
+  - workspaceFolder: Path to the workspace folder (string)
+  - outputFilePath: Path for output logs (string)
+
+> Executes user-defined postCreateCommand and postStartCommand scripts within the devcontainer for the specified workspace. Use this to run setup or initialization tasks after container startup.
+
+
+- ###  devcontainer_exec
+  - workspaceFolder: Path to the workspace folder (string)
+  - outputFilePath: Path for output logs (string)
+  - command: Command to execute (array of string)
+
+> Runs a custom shell command inside the devcontainer for the specified workspace. Useful for executing arbitrary commands or scripts within the devcontainer environment.
 
 ## 🤝 Contributing
 
