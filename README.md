@@ -1,13 +1,58 @@
 # MCP Devcontainers
 
-## In Development. Coming Soon
+## 📌 Pre-condition
 
-## Getting Started
+This project is built with Node.js. For local development, you can either:
+- Install `Node.js` on your machine, or  
+- Use the provided [devcontainer](.devcontainer/devcontainer.json) virtual environment.
+
+You may run the project without installing `Node.js` locally by using `npx`:
+```bash
+npx -y mcp-devcontainers
+```
+
+**Docker is required** in the execution environment:
+- For **local MCP server**: Install Docker on your local machine  
+- For **remote MCP server**: Install Docker on the remote server  
+
+> 📦 Docker installation guide: https://docs.docker.com/get-started/get-docker/
+
+## 🚀 Getting Started
 - Build: `npm run build` - Compiles TypeScript to JavaScript
 - Watch mode: `npm run watch` - Automatically rebuilds on file changes
 - Prepare release: `npm run prepare` - Prepares the package for publishing
 - Run ESLint: `npm run lint` - Executes ESLint for code validation
 - Fix ESLint issues: `npm run lint:fix` - Automatically fixes ESLint errors
-- Start server: `npm run start` - Launches the MCP server with stdio transport
-- Start SSE server: `npm run start:sse` - Runs the MCP server with Server-Sent Events transport
-- Start Streamable HTTP server: `npm run start:http` - Starts the MCP server with streamable HTTP transport
+
+## MCP Transport
+
+- Start server: `npm run start` - Launches the MCP server with **stdio transport**
+- Start SSE server: `npm run start sse` - Runs the MCP server with **Server-Sent Events transport**
+- Start Streamable HTTP server: `npm run start http` - Starts the MCP server with **Streamable HTTP transport**
+
+## 📚 Tools
+
+### In Development. Coming Soon
+
+## 🤝 Contributing
+
+We welcome contributions of any kind to this project, including feature enhancements, UI improvements, documentation updates, test case completions, and syntax corrections. I believe that a real developer can write better code than AI, so if you have concerns about certain parts of the code implementation, feel free to share your suggestions or submit a pull request.
+
+Please review our [Code of Conduct](CODE_OF_CONDUCT.md). It is in effect at all times. We expect it to be honored by everyone who contributes to this project.
+
+For more information, please see [Contributing Guidelines](CONTRIBUTING.md)
+
+## 🐞 Opening an Issue
+
+Before creating an issue, check if you are using the latest version of the project. If you are not up-to-date, see if updating fixes your issue first.
+
+### 🔒 Reporting Security Issues
+
+Review our [Security Policy](SECURITY.md). Do not file a public issue for security vulnerabilities.
+
+## ⭐ Credits
+
+Written by [@AIQL.com](https://github.com/AI-QL).
+
+## 📜 License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

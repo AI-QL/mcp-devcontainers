@@ -1,0 +1,55 @@
+name: Build Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**'
+      - '!LICENSE'
+      - '!*.md'
+      - '!docs/**'
+      - '!.github/**'
+      - '.github/workflows/build-test.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    runs-on: ${{ matrix.os }}
+    name: Test Node.js ${{ matrix.node_version }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node_version: ['20', '22']
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node_version }}
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm i
+
+      - name: Test module script
+        run: |
+          npm run build
