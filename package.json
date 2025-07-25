@@ -1,6 +1,6 @@
 {
   "name": "mcp-devcontainers",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP Server for devcontainers management",
   "private": false,
   "license": "MIT",
@@ -13,6 +13,13 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "keywords": [
+    "modelcontextprotocol",
+    "mcp",
+    "mcp-devcontainer",
+    "devcontainer",
+    "mcp-server"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
