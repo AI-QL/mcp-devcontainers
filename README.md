@@ -32,9 +32,9 @@ npx -y mcp-devcontainers
 
 ## MCP Transport
 
-- Start server: `npm run start` - Launches the MCP server with **stdio transport**
-- Start SSE server: `npm run start sse` - Runs the MCP server with **Server-Sent Events transport**
-- Start Streamable HTTP server: `npm run start http` - Starts the MCP server with **Streamable HTTP transport**
+- Start server: `npm start` - Launches the MCP server with **stdio transport**
+- Start SSE server: `npm start sse` - Runs the MCP server with **Server-Sent Events transport**
+- Start Streamable HTTP server: `npm start http` - Starts the MCP server with **Streamable HTTP transport**
 
 ## 📚 Tools
 
