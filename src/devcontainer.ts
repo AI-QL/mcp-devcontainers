@@ -1,72 +1,89 @@
-import { spawn, SpawnOptions } from 'child_process';
-import fs from 'fs';
+import { spawn, SpawnOptions } from "child_process";
+import fs from "fs";
+import { z } from "zod";
 import path from "path";
 import { createRequire } from "module";
 
-export const NULL_DEVICE = '/dev/null';
+const NULL_DEVICE = "/dev/null";
 
 type CommandResult = Promise<string>;
 
-interface DevcontainerOptions {
-  stdioFilePath?: string;
-}
+const WS_FOLDER_DESC = "Path to the workspace folder (string)";
+const STDIO_FILE_PATH = `Path for output logs (string), default is ${NULL_DEVICE}`;
+const COMMAND = "Command to execute (array of string)";
 
-interface DevContainerUpOptions extends DevcontainerOptions {
-  workspaceFolder: string;
-}
+export const DevUpSchema = z.object({
+  workspaceFolder: z.string().describe(WS_FOLDER_DESC),
+  stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
+});
 
-interface DevContainerRunUserCommandsOptions extends DevcontainerOptions {
-  workspaceFolder: string;
-}
+export const DevRunSchema = z.object({
+  workspaceFolder: z.string().describe(WS_FOLDER_DESC),
+  stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
+});
 
-interface DevContainerExecOptions extends DevcontainerOptions {
-  workspaceFolder: string;
-  command: string[];
-}
+export const DevExecSchema = z.object({
+  workspaceFolder: z.string().describe(WS_FOLDER_DESC),
+  stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
+  command: z.array(z.string()).min(1).describe(COMMAND),
+});
+
+type DevUpArgs = z.infer<typeof DevUpSchema>;
+type DevRunArgs = z.infer<typeof DevRunSchema>;
+type DevExecArgs = z.infer<typeof DevExecSchema>;
 
 const require = createRequire(import.meta.url);
 
 function devcontainerBinaryPath(): string {
   try {
-    const pkgPath = require.resolve('@devcontainers/cli/package.json');
+    const pkgPath = require.resolve("@devcontainers/cli/package.json");
     const pkg = require(pkgPath);
     return path.join(path.dirname(pkgPath), pkg.bin.devcontainer);
   } catch (error) {
-    throw new Error('Failed to locate devcontainer CLI: ' + (error as Error).message);
+    throw new Error(
+      "Failed to locate devcontainer CLI: " + (error as Error).message
+    );
   }
 }
 
-function createOutputStream(stdioFilePath: string = NULL_DEVICE): fs.WriteStream {
+function createOutputStream(
+  stdioFilePath: string = NULL_DEVICE
+): fs.WriteStream {
   try {
-    return fs.createWriteStream(stdioFilePath, { flags: 'w' })
+    return fs.createWriteStream(stdioFilePath, { flags: "w" });
   } catch (error) {
-    throw new Error(`Failed to create output stream: ${(error as Error).message}`);
+    throw new Error(
+      `Failed to create output stream: ${(error as Error).message}`
+    );
   }
 }
 
-async function runCommand(args: string[], stdoutStream: fs.WriteStream): CommandResult {
+async function runCommand(
+  args: string[],
+  stdoutStream: fs.WriteStream
+): CommandResult {
   return new Promise((resolve, reject) => {
     const binaryPath = devcontainerBinaryPath();
-    const child = spawn('node', [binaryPath, ...args], {
-      stdio: ['ignore', 'pipe', 'pipe'],
+    const child = spawn("node", [binaryPath, ...args], {
+      stdio: ["ignore", "pipe", "pipe"],
     } as SpawnOptions);
 
     const stdoutData: string[] = [];
     const stderrData: string[] = [];
 
-    child.on('error', (error) => {
+    child.on("error", (error) => {
       cleanup(error);
       reject(new Error(`Process spawn failed: ${error.message}`));
     });
 
     // Pipe stdout to the stream as before, but also collect it
-    child.stdout?.on('data', (data) => {
-      stdoutData.push(data.toString())
+    child.stdout?.on("data", (data) => {
+      stdoutData.push(data.toString());
       stdoutStream.write(data);
     });
 
     // Collect stderr data instead of piping to process.stderr
-    child.stderr?.on('data', (data) => {
+    child.stderr?.on("data", (data) => {
       stderrData.push(data.toString().trim());
     });
 
@@ -81,39 +98,47 @@ async function runCommand(args: string[], stdoutStream: fs.WriteStream): Command
       }
     };
 
-    child.on('close', (code, signal) => {
+    child.on("close", (code, signal) => {
       cleanup();
       if (code === 0) {
-        resolve(`success with code ${code}\n-------\n${stdoutData.join('\n\n')}`);
+        resolve(
+          `success with code ${code}\n-------\n${stdoutData.join("\n\n")}`
+        );
       } else {
         const reason = signal
           ? `terminated by signal ${signal}`
           : `exited with code ${code}`;
-        
+
         // Combine the error message with the collected stderr output
-        const errorMessage = `Command failed: devcontainer ${args.join(' ')} (${reason})\n-------\n${stderrData.join('\n\n')}`;
+        const errorMessage = `Command failed: devcontainer ${args.join(
+          " "
+        )} (${reason})\n-------\n${stderrData.join("\n\n")}`;
         reject(new Error(errorMessage));
       }
     });
   });
 }
 
-export async function devUp(options: DevContainerUpOptions): CommandResult {
+export async function devUp(options: DevUpArgs): CommandResult {
   const stream = createOutputStream(options.stdioFilePath);
-  return runCommand(['up', '--workspace-folder', options.workspaceFolder], stream);
+  return runCommand(
+    ["up", "--workspace-folder", options.workspaceFolder],
+    stream
+  );
 }
 
-export async function devRunUserCommands(options: DevContainerRunUserCommandsOptions): CommandResult {
+export async function devRunUserCommands(options: DevRunArgs): CommandResult {
   const stream = createOutputStream(options.stdioFilePath);
-  return runCommand(['run-user-commands', '--workspace-folder', options.workspaceFolder], stream);
+  return runCommand(
+    ["run-user-commands", "--workspace-folder", options.workspaceFolder],
+    stream
+  );
 }
 
-export async function devExec(options: DevContainerExecOptions): CommandResult {
+export async function devExec(options: DevExecArgs): CommandResult {
   const stream = createOutputStream(options.stdioFilePath);
-  return runCommand([
-    'exec',
-    '--workspace-folder',
-    options.workspaceFolder,
-    ...options.command
-  ], stream);
+  return runCommand(
+    ["exec", "--workspace-folder", options.workspaceFolder, ...options.command],
+    stream
+  );
 }
