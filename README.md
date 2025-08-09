@@ -32,9 +32,24 @@ npx -y mcp-devcontainers
 
 ## MCP Transport
 
-- Start server: `npm start` - Launches the MCP server with **stdio transport**
-- Start SSE server: `npm start sse` - Runs the MCP server with **Server-Sent Events transport**
-- Start Streamable HTTP server: `npm start http` - Starts the MCP server with **Streamable HTTP transport**
+### Option 1 - Start STDIO server
+
+Launches the MCP server with **stdio transport**
+```bash
+npm start
+```
+
+### Option 2 - Start SSE server
+Runs the MCP server with **Server-Sent Events transport** on `https://{your-domain}/sse`
+```bash
+npm start sse
+```
+
+### Option 3 - Start Streamable HTTP server
+Starts the MCP server with **Streamable HTTP transport** on `https://{your-domain}/mcp`
+```bash
+npm start http
+```
 
 ## 📚 Tools
 
@@ -42,26 +57,55 @@ Tools are built on the [devcontainers/cli](https://github.com/devcontainers/cli)
 
 They enable you to generate and configure development containers directly from `devcontainer.json` configuration files:
 
-- ### devcontainer_up
-  - workspaceFolder: Path to the workspace folder (string)
-  - outputFilePath: Path for output logs (string)
+### `devcontainer_up`
 
-> Initializes and starts a devcontainer environment in the specified workspace folder. Ensures the devcontainer is operational and ready for development tasks.
+Initializes and starts a devcontainer environment in the specified workspace folder. Ensures the devcontainer is operational and ready for development tasks.
+
+- #### Input Parameters
+  | Name | Required | Type | Description |
+  | -------- | -------- | -------- | -------- |
+  | workspaceFolder   | ⚫ | string | Path to the workspace folder |
+  | outputFilePath    | ⚪ | string | Path for output logs |
+
+- #### Returns
+
+  Text content with the devcontainer startup information
 
 
-- ### devcontainer_run_user_commands
-  - workspaceFolder: Path to the workspace folder (string)
-  - outputFilePath: Path for output logs (string)
+### `devcontainer_run_user_commands`
 
-> Executes user-defined postCreateCommand and postStartCommand scripts within the devcontainer for the specified workspace. Use this to run setup or initialization tasks after container startup.
+  Executes user-defined postCreateCommand and postStartCommand scripts within the devcontainer for the specified workspace. Use this to run setup or initialization tasks after container startup.
+
+- #### Input Parameters
+  | Name | Required | Type | Description |
+  | -------- | -------- | -------- | -------- |
+  | workspaceFolder   | ⚫ | string | Path to the workspace folder |
+  | outputFilePath    | ⚪ | string | Path for output logs |
+
+- #### Returns
+
+  Text content with the command execution result
 
 
-- ###  devcontainer_exec
-  - workspaceFolder: Path to the workspace folder (string)
-  - outputFilePath: Path for output logs (string)
-  - command: Command to execute (array of string)
+### `devcontainer_exec`
 
-> Runs a custom shell command inside the devcontainer for the specified workspace. Useful for executing arbitrary commands or scripts within the devcontainer environment.
+  Runs a custom shell command inside the devcontainer for the specified workspace. Useful for executing arbitrary commands or scripts within the devcontainer environment.
+
+- #### Input Parameters
+  | Name | Required | Type | Description |
+  | -------- | -------- | -------- | -------- |
+  | workspaceFolder   | ⚫ | string | Path to the workspace folder |
+  | outputFilePath    | ⚪ | string | Path for output logs |
+  | command           | ⚫ | string[ ] | Command to execute as string array |
+
+- #### Returns
+
+  Text content with the command execution result
+
+
+### `devcontainer_list (TODO)`
+
+### `devcontainer_cleanup (TODO)`
 
 ## 🤝 Contributing
 
