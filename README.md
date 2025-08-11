@@ -103,9 +103,31 @@ Initializes and starts a devcontainer environment in the specified workspace fol
   Text content with the command execution result
 
 
-### `devcontainer_list (TODO)`
+### `devcontainer_cleanup`
 
-### `devcontainer_cleanup (TODO)`
+  Runs docker command to cleanup all devcontainer environments.
+
+- #### Input Parameters
+  
+  N/A
+
+- #### Returns
+
+  Text content with Docker process ID removed
+
+
+### `devcontainer_list`
+
+  Runs docker command to list all devcontainer environments.
+
+- #### Input Parameters
+  
+  N/A
+
+- #### Returns
+
+  Text content with the current devcontainer Docker process status
+
 
 ## 🤝 Contributing
 

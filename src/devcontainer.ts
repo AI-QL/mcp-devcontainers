@@ -9,23 +9,23 @@ const NULL_DEVICE = "/dev/null";
 type CommandResult = Promise<string>;
 
 const WS_FOLDER_DESC = "Path to the workspace folder (string)";
-const STDIO_FILE_PATH = `Path for output logs (string), default is ${NULL_DEVICE}`;
-const COMMAND = "Command to execute (array of string)";
+const STDIO_FILE_PATH_DESC = `Path for output logs (string), default is ${NULL_DEVICE}`;
+const COMMAND_DESC = "Command to execute (array of string)";
 
 export const DevUpSchema = z.object({
   workspaceFolder: z.string().describe(WS_FOLDER_DESC),
-  stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
+  stdioFilePath: z.string().describe(STDIO_FILE_PATH_DESC).optional(),
 });
 
 export const DevRunSchema = z.object({
   workspaceFolder: z.string().describe(WS_FOLDER_DESC),
-  stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
+  stdioFilePath: z.string().describe(STDIO_FILE_PATH_DESC).optional(),
 });
 
 export const DevExecSchema = z.object({
   workspaceFolder: z.string().describe(WS_FOLDER_DESC),
-  stdioFilePath: z.string().describe(STDIO_FILE_PATH).optional(),
-  command: z.array(z.string()).min(1).describe(COMMAND),
+  stdioFilePath: z.string().describe(STDIO_FILE_PATH_DESC).optional(),
+  command: z.array(z.string()).min(1).describe(COMMAND_DESC),
 });
 
 type DevUpArgs = z.infer<typeof DevUpSchema>;

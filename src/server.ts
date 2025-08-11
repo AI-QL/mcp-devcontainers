@@ -10,6 +10,9 @@ import { devUp, devRunUserCommands, devExec } from "./devcontainer.js";
 
 import { DevUpSchema, DevRunSchema, DevExecSchema } from "./devcontainer.js";
 
+import { devCleanup, devList } from "./docker.js";
+import { DevCleanupSchema, DevListSchema } from "./docker.js";
+
 type ToolInput = Tool["inputSchema"];
 type ToolName = keyof typeof ToolMap;
 type ToolArgs = CallToolRequest["params"]["arguments"];
@@ -41,6 +44,24 @@ const ToolMap = {
       return devExec(DevExecSchema.parse(args));
     },
     label: "Devcontainer Exec",
+  },
+  devcontainer_cleanup: {
+    description:
+      "Runs docker command to cleanup all devcontainer environments.",
+    schema: DevCleanupSchema,
+    execute: async (args: ToolArgs) => {
+      return devCleanup(DevCleanupSchema.parse(args));
+    },
+    label: "Devcontainer Cleanup",
+  },
+  devcontainer_list: {
+    description:
+      "Runs docker command to list all devcontainer environments.",
+    schema: DevListSchema,
+    execute: async (args: ToolArgs) => {
+      return devList(DevListSchema.parse(args));
+    },
+    label: "Devcontainer List",
   },
 };
 
@@ -86,14 +107,17 @@ export const createServer = () => {
       switch (name) {
         case "devcontainer_up":
         case "devcontainer_run_user_commands":
-        case "devcontainer_exec": {
-          const result = await Tool.execute(args);
-          return {
-            content: [
-              { type: "text", text: `${Tool.label} result: ${result}` },
-            ],
-          };
-        }
+        case "devcontainer_exec":
+        case "devcontainer_cleanup":
+        case "devcontainer_list":
+          {
+            const result = await Tool.execute(args);
+            return {
+              content: [
+                { type: "text", text: `${Tool.label} result: ${result}` },
+              ],
+            };
+          }
         default:
           return {
             error: {
