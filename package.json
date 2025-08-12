@@ -1,6 +1,6 @@
 {
   "name": "mcp-devcontainers",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "MCP Server for devcontainers management",
   "private": false,
   "license": "MIT",

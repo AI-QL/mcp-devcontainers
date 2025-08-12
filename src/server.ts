@@ -10,8 +10,12 @@ import { devUp, devRunUserCommands, devExec } from "./devcontainer.js";
 
 import { DevUpSchema, DevRunSchema, DevExecSchema } from "./devcontainer.js";
 
-import { devCleanup, devList } from "./docker.js";
-import { DevCleanupSchema, DevListSchema } from "./docker.js";
+import { devCleanup, devList, devWsFolder } from "./docker.js";
+import {
+  DevCleanupSchema,
+  DevListSchema,
+  DevWsFolderSchema,
+} from "./docker.js";
 
 type ToolInput = Tool["inputSchema"];
 type ToolName = keyof typeof ToolMap;
@@ -55,13 +59,21 @@ const ToolMap = {
     label: "Devcontainer Cleanup",
   },
   devcontainer_list: {
-    description:
-      "Runs docker command to list all devcontainer environments.",
+    description: "Runs docker command to list all devcontainer environments.",
     schema: DevListSchema,
     execute: async (args: ToolArgs) => {
       return devList(DevListSchema.parse(args));
     },
     label: "Devcontainer List",
+  },
+  devcontainer_workspace_folders: {
+    description:
+      "Runs find command to get all workspace folders with devcontainer config.",
+    schema: DevWsFolderSchema,
+    execute: async (args: ToolArgs) => {
+      return devWsFolder(DevWsFolderSchema.parse(args));
+    },
+    label: "Devcontainer Workspace Folders",
   },
 };
 
@@ -103,34 +115,34 @@ export const createServer = () => {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     const Tool = ToolMap[name as ToolName];
-    try {
-      switch (name) {
-        case "devcontainer_up":
-        case "devcontainer_run_user_commands":
-        case "devcontainer_exec":
-        case "devcontainer_cleanup":
-        case "devcontainer_list":
-          {
-            const result = await Tool.execute(args);
-            return {
-              content: [
-                { type: "text", text: `${Tool.label} result: ${result}` },
-              ],
-            };
-          }
-        default:
+
+    switch (name) {
+      case "devcontainer_up":
+      case "devcontainer_run_user_commands":
+      case "devcontainer_exec":
+      case "devcontainer_cleanup":
+      case "devcontainer_list":
+      case "devcontainer_workspace_folders":
+      {
+        try {
+          const result = await Tool.execute(args);
           return {
-            error: {
-              code: -32602,
-              message: `Undefined tool: ${name}`,
-            },
+            content: [
+              { type: "text", text: `${Tool.label} result: ${result}` },
+            ],
           };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          return {
+            content: [
+              { type: "text", text: `${Tool.label} failure: ${message}` },
+            ],
+            isError: true,
+          };
+        }
       }
-    } catch (error) {
-      return {
-        content: [{ type: "text", text: `${Tool.label} failure: ${error}` }],
-        isError: true,
-      };
+      default:
+        throw new Error(`Undefined tool: ${name}`);
     }
   });
 

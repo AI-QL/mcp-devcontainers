@@ -1,7 +1,9 @@
 import { spawn, SpawnOptions, exec } from "child_process";
+import { promises } from "fs";
 import fs from "fs";
+import path from "path";
 import { z } from "zod";
-import { promisify } from 'util';
+import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
@@ -11,14 +13,23 @@ const COMMAND = "docker";
 
 type CommandResult = Promise<string>;
 
-const PS_PATTERN = "\"{psID: {{.ID}}, psName: {{.Names}}, workspaceFolder: {{.Label \"devcontainer.local_folder\"}}, container: {{.Label \"dev.containers.id\"}}}\""
+const PS_PATTERN =
+  '{psID: {{.ID}}, psName: {{.Names}}, workspaceFolder: {{.Label "devcontainer.local_folder"}}, container: {{.Label "dev.containers.id"}}}';
+
+const WS_FOLDER_DESC =
+  "A path used to search its subdirectories for all workspace folders containing a devcontainer configuration.";
 
 export const DevCleanupSchema = z.object({});
 
 export const DevListSchema = z.object({});
 
+export const DevWsFolderSchema = z.object({
+  rootPath: z.string().describe(WS_FOLDER_DESC).optional(),
+});
+
 type DevCleanupArgs = z.infer<typeof DevCleanupSchema>;
 type DevListArgs = z.infer<typeof DevListSchema>;
+type DevWsFolderArgs = z.infer<typeof DevWsFolderSchema>;
 
 function createOutputStream(
   stdioFilePath: string = NULL_DEVICE
@@ -99,11 +110,15 @@ export async function devCleanup(options: DevCleanupArgs): CommandResult {
   let ids: string[];
 
   try {
-    const { stdout } = await execAsync("docker ps -aq -f label=dev.containers.id")
+    const { stdout } = await execAsync(
+      "docker ps -aq -f label=dev.containers.id"
+    );
     const raw = stdout.toString().trim();
     ids = raw ? raw.split("\n") : [];
   } catch (error) {
-    return Promise.reject(`Cannot list all docker ps: ${(error as Error).message}`);
+    return Promise.reject(
+      `Cannot list all docker ps: ${(error as Error).message}`
+    );
   }
 
   if (ids.length === 0) {
@@ -123,4 +138,68 @@ export async function devList(options: DevListArgs): CommandResult {
     ["ps", "-a", "--filter", "label=dev.containers.id", "--format", PS_PATTERN],
     stream
   );
+}
+
+// Optionally skip well-known heavy directories to improve performance
+function shouldSkipDirectory(name: string): boolean {
+  const skipDirs = ["node_modules", ".git", "dist", "build", ".next"];
+  return skipDirs.includes(name);
+}
+
+export async function devWsFolder(
+  options: DevWsFolderArgs
+): Promise<CommandResult> {
+  const rootPath = options.rootPath;
+  const searchRoot = rootPath ? path.resolve(rootPath) : process.cwd();
+  const results: string[] = [];
+
+  // Use concurrency to speed up directory traversal
+  async function scanDirectory(dir: string): Promise<void> {
+    let entries: fs.Dirent[];
+
+    try {
+      entries = await promises.readdir(dir, { withFileTypes: true });
+    } catch {
+      // Skip directories that cannot be read (permissions, transient I/O errors, etc.)
+      return;
+    }
+
+    // Collect subdirectories and schedule checks separately to maximize parallelism
+    const subDirs: string[] = [];
+    const checkTasks: Promise<void>[] = [];
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        if (entry.name === ".devcontainer") {
+          checkTasks.push(
+            promises
+              .access(path.join(fullPath, "devcontainer.json"))
+              .then(() => void results.push(fullPath))
+              .catch(() => {
+                /* file not found; ignore */
+              })
+          );
+        }
+        else if (!shouldSkipDirectory(entry.name)) {
+          subDirs.push(fullPath);
+        }
+      }
+    }
+
+    // Wait for all devcontainer.json checks to complete
+    await Promise.all(checkTasks);
+
+    // Recursively scan subdirectories in parallel
+    await Promise.all(subDirs.map(scanDirectory));
+  }
+
+  await scanDirectory(searchRoot);
+
+  if (results.length === 0) {
+    throw new Error(`No Workspace Folders found in ${searchRoot}`);
+  }
+
+  return "\n" + results.join("\n");
 }

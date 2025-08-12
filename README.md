@@ -30,7 +30,7 @@ npx -y mcp-devcontainers
 - Run ESLint: `npm run lint` - Executes ESLint for code validation
 - Fix ESLint issues: `npm run lint:fix` - Automatically fixes ESLint errors
 
-## MCP Transport
+## ✨ MCP Transport
 
 ### Option 1 - Start STDIO server
 
@@ -128,6 +128,58 @@ Initializes and starts a devcontainer environment in the specified workspace fol
 
   Text content with the current devcontainer Docker process status
 
+### `devcontainer_workspace_folders`
+
+  Runs find command to get all workspace folders with devcontainer config.
+
+- #### Input Parameters
+  | Name | Required | Type | Description |
+  | -------- | -------- | -------- | -------- |
+  | rootPath | ⚪ | string | A path used to search its subdirectories for all workspace folders containing a devcontainer configuration. |
+
+- #### Returns
+
+  Text content with all workspace folders under the specified root path.
+
+
+## 🧑‍💻 Quick Experience / Trial
+
+For developers who want to quickly try this project without a local Docker setup, we recommend using GitHub Codespaces:
+
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/AI-QL/mcp-devcontainers?quickstart=1)
+
+Then follow these steps to set up a trial environment:
+
+- Wait for the environment to initialize in your browser
+
+- Install dependencies: `npm install`
+
+- Launch the service: `npm start http`
+
+  > The codespace will automatically provide a forwarded port (e.g., https://ominous-halibut-7vvq7v56vgq6hr5p9-3001.app.github.dev/)
+
+- Make the `forwarded port` publicly accessible (located on the right side of the VSCode `Terminal` tab)
+
+- Connect using [mcp-inspector](https://github.com/modelcontextprotocol/inspector) via Streamable HTTP
+
+  ```bash
+  npx -y @modelcontextprotocol/inspector
+  ```
+  > For a streamable HTTP connection, remember to append `/mcp` to the URL
+
+For MCP Clients that don't support remote URLs, use this alternative configuration:
+
+```json
+{
+  "mcpServers": {
+    "Devcontainer": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://ominous-halibut-7vvq7v56vgq6hr5p9-3001.app.github.dev/mcp"]
+    }
+  }
+}
+```
 
 ## 🤝 Contributing
 
