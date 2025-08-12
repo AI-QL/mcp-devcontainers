@@ -1,7 +1,9 @@
 # MCP Devcontainers
 
-![](https://camo.githubusercontent.com/e36ffd91d8e6eaf39b1cf1d2ba210c6bb4022a772471bb077f28764e2a6da723/68747470733a2f2f62616467652e6d6370782e6465763f747970653d736572766572)
+[![](https://camo.githubusercontent.com/e36ffd91d8e6eaf39b1cf1d2ba210c6bb4022a772471bb077f28764e2a6da723/68747470733a2f2f62616467652e6d6370782e6465763f747970653d736572766572)](https://github.com/modelcontextprotocol/servers)
 [![npm](https://img.shields.io/npm/v/mcp-devcontainers)](https://www.npmjs.com/package/mcp-devcontainers)
+[![NPM Downloads](https://img.shields.io/npm/d18m/mcp-devcontainers)](https://www.npmjs.com/package/mcp-devcontainers)
+[![](https://img.shields.io/badge/Node.js-20%2B-brightgreen?style=flat-square)](https://nodejs.org/)
 [![LICENSE](https://img.shields.io/github/license/AI-QL/mcp-devcontainers)](https://github.com/AI-QL/mcp-devcontainers/blob/main/LICENSE)
 
 MCP server for devcontainer to generate and configure development containers directly from devcontainer.json configuration files.
