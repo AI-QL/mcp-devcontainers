@@ -81,7 +81,7 @@ export const createServer = () => {
   const server = new Server(
     {
       name: "mcp-devcontainers",
-      version: "0.1.0",
+      version: "1.0.1",
     },
     {
       capabilities: {
