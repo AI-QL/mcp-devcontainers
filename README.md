@@ -168,7 +168,10 @@ Then follow these steps to set up a trial environment:
   ```bash
   npx -y @modelcontextprotocol/inspector
   ```
+
   > For a streamable HTTP connection, remember to append `/mcp` to the URL
+
+  > `devcontainer_up` typically takes a considerable amount of time to start the container. If you want to receive the result within a single response interaction, you will need to increase both the `Request Timeout` and the `Maximum Total Timeout` in the `Configuration` of the `mcp-inspector`
 
 For MCP Clients that don't support remote URLs, use this alternative configuration:
 
